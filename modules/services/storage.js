@@ -10,12 +10,21 @@
  var fs = require('fs');
  var rimraf = require('rimraf');
 
+// Custom consts
+const FILE_TYPES = ['jpg', 'png'];
+
 // Bug tracking
-// var Rollbar = require('rollbar');
-// var rollbar = new Rollbar(env.ROLLBAR_ACCESS_TOKEN);
+var Rollbar = require('rollbar');
+var rollbar = new Rollbar(env.ROLLBAR_ACCESS_TOKEN);
 
 function upload(order, env) {
   var s3 = new AWS.S3({region: env.AWS_REGION});
+
+  var filename = request.body.filename + "." + file_type;
+  var parent_dir = "./" + request.body.aws_directory.split("/")[0];
+  var filenameFull = "./" + request.body.aws_directory + "/" + filename;
+  console.log(new Date().toISOString(), ": Filename -> ", filenameFull);
+  var canvas_url = process.env.SISU_API_URL + "/render/prints/" + request.body.order_id + "?render_token=" + process.env.SISU_RENDER_TOKEN;
 
   fs.readFile(order.filenameFull, function(err, temp_png_data){
     if(err != null){
