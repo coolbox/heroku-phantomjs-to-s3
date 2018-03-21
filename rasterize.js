@@ -1,20 +1,21 @@
 var page = require('webpage').create(),
     system = require('system'),
-    address, output, size, file_type, orderObject
+    address, output, size, file_type;
 
 if (system.args.length < 3 || system.args.length > 6) {
   console.log('Usage: rasterize.js URL filename [paperwidth*paperheight|paperformat]');
-  console.log('  image (png/jpg output) examples: "1920px" entire page, window width 1920px');
-  console.log('                                   "800px*600px" window, clipped to 800x600');
+  console.log('image (png/jpg output) examples: "1920px" entire page, window width 1920px');
+  console.log('"800px*600px" window, clipped to 800x600');
   phantom.exit(1);
 } else {
   address = system.args[1];
   output = system.args[2];
   file_type = system.args[4];
 
-  console.log("Address: ", address);
-  console.log("Output: ", output);
-  console.log("File type: ", file_type);
+  // console.log("Address: ", address);
+  // console.log("Output: ", output);
+  // console.log("File type: ", file_type);
+  console.log("PH Order: ", output, system.args[5]);
 
   page.viewportSize = { width: 3508, height: 4961 };
 
@@ -30,7 +31,7 @@ if (system.args.length < 3 || system.args.length > 6) {
       pageHeight = parseInt(pageWidth * 3/4, 10); // it's as good an assumption as any
       page.viewportSize = { width: pageWidth, height: pageHeight };
     }
-    console.log("Viewport size: ", page.viewportSize.width, page.viewportSize.height);
+    // console.log("Viewport size: ", page.viewportSize.width, page.viewportSize.height);
   }
 
   var renderAndExit = function(){
@@ -43,16 +44,8 @@ if (system.args.length < 3 || system.args.length > 6) {
     // Ensures garbage collection
     // Docs: http://phantomjs.org/api/webpage/method/close.html
     page.close();
-    console.log()
     phantom.exit(0);
   }
-
-  page.onConsoleMessage = function(msg, lineNum, sourceId) {
-    if(msg == "Page loaded"){
-      console.log(new Date().toISOString(), ": The page loaded.");
-      renderAndExit();
-    }
-  };
 
   var settings = {
     encoding: "utf8"
@@ -62,6 +55,8 @@ if (system.args.length < 3 || system.args.length > 6) {
     if (status !== 'success') {
       console.log(address, ': Unable to load.');
       phantom.exit(1);
+    } else {
+      renderAndExit();
     }
   });
 }
