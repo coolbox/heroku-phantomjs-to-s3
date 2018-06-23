@@ -17,7 +17,6 @@ function PrintObject(renderRequest, phantomInstance, crawlStatus) {
   var remoteDir = renderRequest.remoteDir;
   var localDir = "./images/" + remoteDir.split("/")[0];
   var filenameAndDir = "./images/" + remoteDir + "/" + filename;
-  // var canvasUrl = process.env.SISU_API_URL + "/render/prints/" + renderRequest.orderId + "?render_token=" + process.env.SISU_RENDER_TOKEN;
 
   return {
     typeOfRender: renderRequest.typeOfRender,
