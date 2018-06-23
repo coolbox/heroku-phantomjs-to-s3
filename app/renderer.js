@@ -67,15 +67,13 @@ function createPrintRender(crawl) {
 
   crawl.phantomInstance.createPage()
     //open page in a tab
-    .then(function (tab) {
+    .then((tab) => {
       page = tab;
-      page.viewportSize = crawl.viewportSize;
-      page.clipRect = {
-        top: 0,
-        left: 0,
+      page.property('clipRect', {
         width: crawl.viewportSize.width,
         height: crawl.viewportSize.height
-      };
+      });
+
       page.setting("resourceTimeout", crawl.resourceTimeout);
 
       // Instead of running a timeOut, we just listen
