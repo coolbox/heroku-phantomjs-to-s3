@@ -17,21 +17,24 @@ function PrintObject(renderRequest, phantomInstance, crawlStatus) {
   var remoteDir = renderRequest.remoteDir;
   var localDir = "./images/" + remoteDir.split("/")[0];
   var filenameAndDir = "./images/" + remoteDir + "/" + filename;
-  var canvasUrl = process.env.SISU_API_URL + "/render/prints/" + renderRequest.orderId + "?render_token=" + process.env.SISU_RENDER_TOKEN;
 
   return {
+    typeOfRender: renderRequest.typeOfRender,
     orderId: renderRequest.orderId,
     renderRequest: renderRequest,
     filename: filename,
     remoteDir: remoteDir,
     filenameAndDir: filenameAndDir,
-    canvasUrl: canvasUrl,
+    canvasUrl: SisuClient.apiUrl(
+      renderRequest.orderId,
+      renderRequest.typeOfRender
+    ),
     processId: phantomInstance.process.pid, // process id of the child process
     crawlStatus: crawlStatus,
     phantomInstance: phantomInstance,
     viewportSize: {
-      width: 3508,
-      height: 4961
+      width: renderRequest.width,
+      height: renderRequest.height
     }, // viewport of the phantom browser
     format: renderRequest.fileType, // format for the image
     timeOut: 5000 //Max time to wait for a website to load
@@ -64,15 +67,13 @@ function createPrintRender(crawl) {
 
   crawl.phantomInstance.createPage()
     //open page in a tab
-    .then(function (tab) {
+    .then((tab) => {
       page = tab;
-      page.viewportSize = crawl.viewportSize;
-      page.clipRect = {
-        top: 0,
-        left: 0,
+      page.property('clipRect', {
         width: crawl.viewportSize.width,
         height: crawl.viewportSize.height
-      };
+      });
+
       page.setting("resourceTimeout", crawl.resourceTimeout);
 
       // Instead of running a timeOut, we just listen
@@ -95,9 +96,16 @@ function createPrintRender(crawl) {
               crawl.renderBase64 = base64;
               var remotUrl = Storage.upload(crawl);
 
-              SisuClient.sisuOrderPut(crawl.orderId, {
-                print_url: remotUrl
-              });
+              // Set the param name based on
+              // the type of render.
+              var params = {};
+              if(crawl.typeOfRender === "mockup"){
+                params["mockup_url"] = remotUrl;
+              } else {
+                params["print_url"] = remotUrl;
+              }
+
+              SisuClient.sisuOrderPut(crawl.orderId, params);
             });
 
           // This releases the page memory
@@ -108,6 +116,19 @@ function createPrintRender(crawl) {
         }
       });
 
+      page.on('onError', function(msg, trace) {
+        console.log("Error: ", msg, trace);
+      });
+
+      page.on('onLoadFinished', function(status) {
+        console.log("Load finished: ", status);
+      });
+
+      page.on('onResourceError', function(error) {
+        console.log("onResourceError: ", error);
+      });
+
+      console.log(printCanvasUrl);
       page.open(printCanvasUrl, {encoding: "utf8"});
     })
     .catch(function (e) {
